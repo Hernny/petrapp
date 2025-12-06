@@ -1,0 +1,73 @@
+name: petrapp_devcontainer
+
+services:
+  app:
+    build:
+      context: ..
+      dockerfile: .devcontainer/Dockerfile
+    image: petrapp-dev:latest
+    container_name: petrapp-dev
+    volumes:
+      - ../:/workspace
+      - /workspace/node_modules
+ 
+    environment:
+      DATABASE_URL: postgresql://petrapp:petrapp_dev@postgres:5432/petrapp_db
+      REDIS_URL: redis://redis:6379
+      SOLANA_RPC_URL: https://api.devnet.solana.com
+      NODE_ENV: development
+    ports:
+      - "3000:3000"    # Web
+      - "3001:3001"    # Admin
+      - "3333:3333"    # API
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - petrapp_network
+    stdin_open: true
+    tty: true
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: petrapp-postgres
+    environment:
+      POSTGRES_USER: petrapp
+      POSTGRES_PASSWORD: petrapp_dev
+      POSTGRES_DB: petrapp_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - petrapp_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U petrapp"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: petrapp-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - petrapp_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  petrapp_network:
+    driver: bridge
