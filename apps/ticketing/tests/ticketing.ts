@@ -1,12 +1,12 @@
 import * as anchor from "@coral-xyz/anchor";
 import { Program } from "@coral-xyz/anchor";
-import { Blockchain } from "../target/types/blockchain";
+import { Ticketing } from "../target/types/ticketing";
 
-describe("blockchain", () => {
+describe("ticketing", () => {
   // Configure the client to use the local cluster.
   anchor.setProvider(anchor.AnchorProvider.env());
 
-  const program = anchor.workspace.blockchain as Program<Blockchain>;
+  const program = anchor.workspace.ticketing as Program<Ticketing>;
 
   it("Is initialized!", async () => {
     // Add your test here.

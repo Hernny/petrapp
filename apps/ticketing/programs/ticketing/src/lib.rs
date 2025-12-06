@@ -1,9 +1,9 @@
 use anchor_lang::prelude::*;
 
-declare_id!("Fus7LSp5DX6sh6zQ3Yvcs7kBYbfmocY2G3LTBVk7yeZJ");
+declare_id!("3zFJJ44BbmXKaTAg31Jgf1TDWRENTYU6E11R691HkHad");
 
 #[program]
-pub mod blockchain {
+pub mod ticketing {
     use super::*;
 
     pub fn initialize(ctx: Context<Initialize>) -> Result<()> {
