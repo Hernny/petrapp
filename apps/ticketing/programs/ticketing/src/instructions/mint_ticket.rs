@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
 use crate::contexts::{MintTicket, MintTicketArgs};
-use crate::models::{TicketingEvent, EventStatus, Ticket, TicketStatus};
+use crate::models::{EventStatus, TicketStatus};
 use crate::error::TicketingError;
 
 pub fn handler(ctx: Context<MintTicket>, args: MintTicketArgs) -> Result<()> {
@@ -77,11 +77,6 @@ pub fn handler(ctx: Context<MintTicket>, args: MintTicketArgs) -> Result<()> {
         .checked_add(1)
         .ok_or(TicketingError::Overflow)?;
     event.updated_at = now;
-
-    // Auto-transición: Upcoming → Live
-    if now >= event.starts_at && event.status == EventStatus::Upcoming {
-        event.status = EventStatus::Live;
-    }
 
     // ===== EMITIR EVENTOS =====
 

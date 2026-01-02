@@ -1,5 +1,5 @@
 use anchor_lang::prelude::*;
-use crate::models::{TicketingEvent, EventStatus, RefundPolicy, CancellationReason};
+use crate::models::{TicketingEvent, RefundPolicy,};
 
 #[derive(AnchorSerialize, AnchorDeserialize)]
 pub struct CreateEventArgs {
@@ -15,6 +15,7 @@ pub struct CreateEventArgs {
 }
 
 #[derive(Accounts)]
+#[instruction(args: CreateEventArgs)]
 pub struct CreateEvent<'info> {
     /// Organizer que firma y paga la creación del evento
     #[account(mut)]

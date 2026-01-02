@@ -2,12 +2,13 @@ use anchor_lang::prelude::*;
 use crate::contexts::{TransferTicket, TransferTicketArgs};
 use crate::models::Ticket;
 use crate::error::TicketingError;
+use crate::models::TicketStatus;
 
 pub fn handler(ctx: Context<TransferTicket>, args: TransferTicketArgs) -> Result<()> {
     let ticket: &mut Account<Ticket> = &mut ctx.accounts.ticket;
 
     // No permitir transferir tickets usados
-    require!(!ticket.used, TicketingError::TicketAlreadyUsed);
+    require!(ticket.status == TicketStatus::Active, TicketingError::TicketAlreadyUsed);
 
     // ownership ya se validó en el contexto (constraint del Accounts)
     ticket.owner = args.new_owner;
@@ -21,6 +22,7 @@ pub fn handler(ctx: Context<TransferTicket>, args: TransferTicketArgs) -> Result
     // Actualizar timestamp de última modificación
     let now = Clock::get()?.unix_timestamp;
     ticket.updated_at = now;
+    
 
     Ok(())
 }

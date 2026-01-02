@@ -1,6 +1,7 @@
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Mint, Token, TokenAccount};
-use crate::models::{Event, Ticket};
+use crate::models::{TicketingEvent, Ticket};
+use crate::error::TicketingError;
 
 #[derive(AnchorSerialize, AnchorDeserialize)]
 pub struct MintTicketArgs {
@@ -10,13 +11,13 @@ pub struct MintTicketArgs {
     pub referrer: Pubkey,
 }
 
-#[derive(Accounts)]
+#[derive(Accounts)] 
 pub struct MintTicket<'info> {
     #[account(mut)]
     pub buyer: Signer<'info>,
 
     #[account(mut)]
-    pub event: Account<'info, Event>,
+    pub event: Account<'info, TicketingEvent>,
 
     pub ticket_mint: Account<'info, Mint>,
 
@@ -34,8 +35,7 @@ pub struct MintTicket<'info> {
         seeds = [b"ticket", ticket_mint.key().as_ref()],
         bump
     )]
-    pub ticket: Account<'info, Ticket>,
-
+    pub ticket: Account<'info, Ticket>, 
     pub system_program: Program<'info, System>,
     pub token_program: Program<'info, Token>,
 }

@@ -33,7 +33,7 @@ pub fn handler(ctx: Context<CreateEvent>, args: CreateEventArgs) -> Result<()> {
 
     require!(
         args.starts_at >= now,
-        TicketingError::EventInThePast
+        TicketingError::EventStartInThePast
     );
 
     // ✅ Rellenar Event (cuenta ya creada por el context con seeds + metadata_hash)
@@ -43,7 +43,7 @@ pub fn handler(ctx: Context<CreateEvent>, args: CreateEventArgs) -> Result<()> {
     event.id = event.key();
 
     // Guardar bump para auditoría
-    event.bump = ctx.bumps["event"];
+    event.bump = ctx.bumps.event;
 
     event.organizer = ctx.accounts.organizer.key();
     event.name = args.name;
