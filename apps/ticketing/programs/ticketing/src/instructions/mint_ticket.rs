@@ -1,64 +1,131 @@
 use anchor_lang::prelude::*;
 use crate::contexts::{MintTicket, MintTicketArgs};
-use crate::constants::{
-    TICKET_EXTERNAL_ID_MAX_LEN,
-    TICKET_CATEGORY_MAX_LEN,
-}; 
+use crate::models::{TicketingEvent, EventStatus, Ticket, TicketStatus};
 use crate::error::TicketingError;
 
 pub fn handler(ctx: Context<MintTicket>, args: MintTicketArgs) -> Result<()> {
-    // Validar longitudes
+    // ===== VALIDACIONES =====
+
+    // Metadata
     require!(
-        args.external_id.len() <= TICKET_EXTERNAL_ID_MAX_LEN,
-        TicketingError::TicketExternalIdTooLong
+        args.metadata_uri.len() > 0,
+        TicketingError::MetadataUriRequired
     );
     require!(
-        args.category.len() <= TICKET_CATEGORY_MAX_LEN,
-        TicketingError::CategoryTooLong
+        args.metadata_uri.len() <= 512,
+        TicketingError::MetadataUriTooLong
+    );
+
+    // Precio
+    require!(
+        args.price_amount > 0,
+        TicketingError::InvalidTicketPrice
     );
 
     let buyer = &ctx.accounts.buyer;
     let event = &mut ctx.accounts.event;
     let ticket = &mut ctx.accounts.ticket;
-
     let now = Clock::get()?.unix_timestamp;
 
-    // Regla 1: evento activo y no cancelado
-    require!(event.is_active, TicketingError::EventNotActive);
-    require!(!event.is_cancelled, TicketingError::EventCancelled);
+    // Estado del evento
+    match event.status {
+        EventStatus::Upcoming | EventStatus::Live => {},
+        _ => return Err(TicketingError::EventNotActive.into()),
+    }
 
-    // Regla 2: no vendido más allá del total
+    require!(
+        event.status != EventStatus::Cancelled,
+        TicketingError::EventCancelled
+    );
+
+    // Stock
     require!(
         event.sold_tickets < event.total_tickets,
         TicketingError::EventSoldOut
     );
 
-    // TODO (futuro): max_tickets_per_wallet
-    // Aquí, para cumplirlo bien, necesitarías contar tickets existentes
-    // del mismo (event, buyer) off-chain o con otra PDA agregada.
+    // Timing
+    require!(
+        now <= event.ends_at,
+        TicketingError::EventHasFinished
+    );
 
-    // Rellenar ticket
-    ticket.external_id = args.external_id;
-    ticket.owner = buyer.key();
+    // ===== RELLENAR TICKET =====
+
+    ticket.ticket_mint = ctx.accounts.ticket_mint.key();
     ticket.event = event.key();
+    ticket.original_buyer = buyer.key();
+    ticket.owner = buyer.key();
+    ticket.referrer = args.referrer;
 
-    ticket.purchased_at = now;
+    ticket.metadata_uri = args.metadata_uri;
+    ticket.metadata_hash = args.metadata_hash;
+
     ticket.created_at = now;
     ticket.updated_at = now;
-
-    ticket.used = false;
+    ticket.last_transfer_at = now;
     ticket.used_at = 0;
-    ticket.transfer_count = 0;
 
-    ticket.category = args.category;
+    ticket.status = TicketStatus::Active;
+    ticket.transfer_count = 0;
     ticket.price_amount = args.price_amount;
 
-    // Actualizar evento
+    // ===== ACTUALIZAR EVENTO =====
+
     event.sold_tickets = event
         .sold_tickets
         .checked_add(1)
         .ok_or(TicketingError::Overflow)?;
     event.updated_at = now;
 
+    // Auto-transición: Upcoming → Live
+    if now >= event.starts_at && event.status == EventStatus::Upcoming {
+        event.status = EventStatus::Live;
+    }
+
+    // ===== EMITIR EVENTOS =====
+
+    emit!(TicketMinted {
+        ticket: ticket.key(),
+        event: event.key(),
+        ticket_mint: ctx.accounts.ticket_mint.key(),
+        buyer: buyer.key(),
+        original_buyer: ticket.original_buyer,
+        referrer: args.referrer,
+        metadata_hash: args.metadata_hash,
+        price_amount: args.price_amount,
+        total_sold: event.sold_tickets,
+        minted_at: now,
+    });
+
+    if event.sold_tickets == event.total_tickets {
+        emit!(EventSoldOut {
+            event: event.key(),
+            total_tickets: event.total_tickets,
+            sold_out_at: now,
+        });
+    }
+
     Ok(())
+}
+
+#[event]
+pub struct TicketMinted {
+    pub ticket: Pubkey,
+    pub event: Pubkey,
+    pub ticket_mint: Pubkey,
+    pub buyer: Pubkey,
+    pub original_buyer: Pubkey,
+    pub referrer: Pubkey,
+    pub metadata_hash: [u8; 32],
+    pub price_amount: u64,
+    pub total_sold: u64,
+    pub minted_at: i64,
+}
+
+#[event]
+pub struct EventSoldOut {
+    pub event: Pubkey,
+    pub total_tickets: u64,
+    pub sold_out_at: i64,
 }

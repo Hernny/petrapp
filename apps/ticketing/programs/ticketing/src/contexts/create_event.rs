@@ -1,20 +1,17 @@
 use anchor_lang::prelude::*;
-use crate::models::Event;
-use crate::constants::{
-    EVENT_SPACE,
-};
+use crate::models::{TicketingEvent, EventStatus, RefundPolicy, CancellationReason};
 
 #[derive(AnchorSerialize, AnchorDeserialize)]
 pub struct CreateEventArgs {
-    pub name: String,
-    pub description: String,
-    pub venue: String,
-    pub image_url: String,
-    pub external_id: String,
-    pub starts_at: i64,
-    pub ends_at: i64,
+    pub name: String,                      // Max 64 bytes
+    pub metadata_uri: String,              // Max 512 bytes (IPFS URL o JSON)
+    pub metadata_hash: [u8; 32],           // SHA-256 hash
+    pub starts_at: i64,                    // UNIX timestamp
+    pub ends_at: i64,                      // UNIX timestamp
     pub total_tickets: u64,
     pub max_tickets_per_wallet: u32,
+    pub is_resellable: bool,
+    pub refund_policy: RefundPolicy,
 }
 
 #[derive(Accounts)]
@@ -27,12 +24,16 @@ pub struct CreateEvent<'info> {
     #[account(
         init,
         payer = organizer,
-        space = EVENT_SPACE,
+        space = TicketingEvent::SPACE,
         // PDA por organizer
-        seeds = [b"event", organizer.key().as_ref()],
+        seeds = [
+            b"event", 
+            organizer.key().as_ref(), 
+            args.metadata_hash.as_ref()
+        ],
         bump
     )]
-    pub event: Account<'info, Event>,
+    pub event: Account<'info, TicketingEvent>,
 
     pub system_program: Program<'info, System>,
 }

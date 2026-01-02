@@ -3,12 +3,9 @@ use anchor_lang::prelude::*;
 pub mod models;
 pub mod contexts;
 pub mod instructions;
-pub mod constants; // <--- AÑADE ESTO
 pub mod error;
 
-use contexts::*;
-// si no usas `use instructions::*;` puedes quitarlo
-// use instructions::*;
+use contexts::*; 
 
 declare_id!("3zFJJ44BbmXKaTAg31Jgf1TDWRENTYU6E11R691HkHad");
 

@@ -1,5 +1,5 @@
-pub mod event;
-pub mod ticket;
 
-pub use event::Event;
-pub use ticket::Ticket;
+pub mod ticket;
+pub mod ticketing_event;
+pub use ticket::*;
+pub use ticketing_event::*;
