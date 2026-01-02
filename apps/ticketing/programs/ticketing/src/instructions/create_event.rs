@@ -73,6 +73,7 @@ pub fn handler(ctx: Context<CreateEvent>, args: CreateEventArgs) -> Result<()> {
         event: event.key(),
         organizer: ctx.accounts.organizer.key(),
         metadata_hash: args.metadata_hash,
+        bump: event.bump, 
         created_at: now,
     });
 
@@ -84,5 +85,6 @@ pub struct EventCreated {
     pub event: Pubkey,
     pub organizer: Pubkey,
     pub metadata_hash: [u8; 32],
+    pub bump: u8,
     pub created_at: i64,
 }
