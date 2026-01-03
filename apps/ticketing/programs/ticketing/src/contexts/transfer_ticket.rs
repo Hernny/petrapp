@@ -1,5 +1,5 @@
 use anchor_lang::prelude::*;
-use crate::models::Ticket;
+use crate::models::{TicketingEvent, Ticket};
 use crate::error::TicketingError;
 
 #[derive(AnchorSerialize, AnchorDeserialize)]
@@ -19,4 +19,10 @@ pub struct TransferTicket<'info> {
         constraint = ticket.owner == owner.key() @ TicketingError::NotTicketOwner
     )]
     pub ticket: Account<'info, Ticket>,
+
+    /// Evento asociado al ticket
+    #[account()]
+    pub event: Account<'info, TicketingEvent>,
+     
+    pub system_program: Program<'info, System>,
 }
