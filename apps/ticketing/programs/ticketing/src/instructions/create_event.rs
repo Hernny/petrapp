@@ -46,6 +46,8 @@ pub fn handler(ctx: Context<CreateEvent>, args: CreateEventArgs) -> Result<()> {
     event.bump = ctx.bumps.event;
 
     event.organizer = ctx.accounts.organizer.key();
+    event.payment_mint = args.payment_mint;
+    event.treasury = args.treasury;
     event.name = args.name;
     event.metadata_uri = args.metadata_uri;
     event.metadata_hash = args.metadata_hash;

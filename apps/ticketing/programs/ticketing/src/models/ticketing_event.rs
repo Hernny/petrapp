@@ -10,6 +10,12 @@ pub struct TicketingEvent {
     // Quién controla el evento (organizador)
     pub organizer: Pubkey,
 
+    // Moneda de cobro (ej: USDC mint)
+    pub payment_mint: Pubkey,
+
+    // Wallet/ATA recaudadora
+    pub treasury: Pubkey,
+
     // Identidad legible on-chain
     // Máx. razonables para no reventar costos:
     // name: 64, description: 256, venue: 128, image_url: 256
@@ -82,6 +88,8 @@ impl TicketingEvent {
     pub const SPACE: usize = 8 +            // discriminator
         32 +                                // id
         32 +                                // organizer
+        32 +                                // payment_mint
+        32 +                                // treasury
         (4 + 64) +                          // name
         32 +                                // metadata_hash
         (4 + 512) +                         // metadata_uri

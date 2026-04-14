@@ -12,6 +12,8 @@ pub struct CreateEventArgs {
     pub max_tickets_per_wallet: u32,
     pub is_resellable: bool,
     pub refund_policy: RefundPolicy,
+    pub payment_mint: Pubkey,              // Mint de la moneda de cobro (Ej: USDC)
+    pub treasury: Pubkey,                  // Token account donde se recibirán los pagos
 }
 
 #[derive(Accounts)]
