@@ -3,6 +3,9 @@ use crate::contexts::{MintTicket, MintTicketArgs};
 use crate::models::{EventStatus, TicketStatus};
 use crate::error::TicketingError;
 
+use anchor_spl::token::{self, MintTo, TransferChecked};
+use mpl_token_metadata::types::TokenStandard;
+
 pub fn handler(ctx: Context<MintTicket>, args: MintTicketArgs) -> Result<()> {
     // ===== VALIDACIONES =====
 
@@ -50,8 +53,75 @@ pub fn handler(ctx: Context<MintTicket>, args: MintTicketArgs) -> Result<()> {
         TicketingError::EventHasFinished
     );
 
+    // ===== COBRO DEL TICKET (USDC) =====
+    {
+        let transfer_cpi_accounts = TransferChecked {
+            from: ctx.accounts.buyer_payment_ata.to_account_info(),
+            mint: ctx.accounts.payment_mint.to_account_info(),
+            to: ctx.accounts.treasury_payment_ata.to_account_info(),
+            authority: ctx.accounts.buyer.to_account_info(),
+        };
+        let transfer_cpi_ctx = CpiContext::new(
+            ctx.accounts.token_program.to_account_info(),
+            transfer_cpi_accounts,
+        );
+        token::transfer_checked(
+            transfer_cpi_ctx,
+            args.price_amount,
+            ctx.accounts.payment_mint.decimals,
+        )?;
+    }
+
+    // ===== MINTEO DEL NFT (SPL Token) =====
+    // El PDA del evento firma la creación y acuñación del NFT del ticket
+    let event_key = event.organizer;
+    let metadata_hash = event.metadata_hash;
+    let bump = event.bump;
+    
+    let signer_seeds: &[&[&[u8]]] = &[&[
+        b"event",
+        event_key.as_ref(),
+        metadata_hash.as_ref(),
+        &[bump],
+    ]];
+
+    {
+        let mint_cpi_accounts = MintTo {
+            mint: ctx.accounts.ticket_mint.to_account_info(),
+            to: ctx.accounts.buyer_ticket_ata.to_account_info(),
+            authority: event.to_account_info(),
+        };
+        let mint_cpi_ctx = CpiContext::new_with_signer(
+            ctx.accounts.token_program.to_account_info(),
+            mint_cpi_accounts,
+            signer_seeds,
+        );
+        token::mint_to(mint_cpi_ctx, 1)?; // Supply = 1
+    }
+
+    // ===== METAPLEX MASTER EDITION =====
+    {
+        use mpl_token_metadata::instructions::CreateV1CpiBuilder;
+        
+        CreateV1CpiBuilder::new(&ctx.accounts.token_metadata_program.to_account_info())
+            .metadata(&ctx.accounts.metadata_account.to_account_info())
+            .master_edition(Some(&ctx.accounts.master_edition_account.to_account_info()))
+            .mint(&ctx.accounts.ticket_mint.to_account_info(), true)
+            .authority(&event.to_account_info())
+            .payer(&ctx.accounts.buyer.to_account_info())
+            .update_authority(&event.to_account_info(), true)
+            .system_program(&ctx.accounts.system_program.to_account_info())
+            .sysvar_instructions(&ctx.accounts.sysvar_instructions.to_account_info())
+            .token_standard(TokenStandard::NonFungible)
+            .name(format!("Ticket: {}", event.name).chars().take(32).collect())
+            .uri(args.metadata_uri.clone())
+            .seller_fee_basis_points(0)
+            .invoke_signed(signer_seeds)?;
+    }
+
     // ===== RELLENAR TICKET =====
 
+    ticket.bump = ctx.bumps.ticket;
     ticket.ticket_mint = ctx.accounts.ticket_mint.key();
     ticket.event = event.key();
     ticket.original_buyer = buyer.key();
