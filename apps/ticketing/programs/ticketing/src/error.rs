@@ -97,4 +97,7 @@ pub enum TicketingError {
 
     #[msg("Account not found")]
     AccountNotFound,
+
+    #[msg("Ticket cannot be transferred")]
+    TicketCannotBeTransferred,
 }

@@ -1,4 +1,5 @@
 use anchor_lang::prelude::*;
+use anchor_spl::token::{self, TransferChecked};
 use crate::contexts::{TransferTicket, TransferTicketArgs};
 use crate::error::TicketingError;
 use crate::models::{Ticket, TicketingEvent,TicketStatus, EventStatus};
@@ -6,6 +7,12 @@ use crate::models::{Ticket, TicketingEvent,TicketStatus, EventStatus};
 pub fn handler(ctx: Context<TransferTicket>, args: TransferTicketArgs) -> Result<()> {
     let ticket: &mut Account<Ticket> = &mut ctx.accounts.ticket;
     let event: &Account<TicketingEvent> = &ctx.accounts.event;
+
+    // ✅ Validación: El evento permite reventa
+    require!(
+        event.is_resellable,
+        TicketingError::TicketCannotBeTransferred // Assume valid matching error
+    );
     // ✅ Validar que el evento está activo (no cancelado, no terminado)
     require!(
         event.status != EventStatus::Cancelled,
@@ -40,6 +47,20 @@ pub fn handler(ctx: Context<TransferTicket>, args: TransferTicketArgs) -> Result
     let now = Clock::get()?.unix_timestamp;
     ticket.updated_at = now;
     ticket.last_transfer_at = now;
+
+    // Ejecutar Transferencia SPL NFT (Metaplex Ticket)
+    let transfer_accounts = TransferChecked {
+        from: ctx.accounts.from_ata.to_account_info(),
+        mint: ctx.accounts.ticket_mint.to_account_info(),
+        to: ctx.accounts.to_ata.to_account_info(),
+        authority: ctx.accounts.owner.to_account_info(),
+    };
+    let cpi_ctx = CpiContext::new(
+        ctx.accounts.token_program.to_account_info(),
+        transfer_accounts,
+    );
+    // NFTs always have 0 decimals
+    token::transfer_checked(cpi_ctx, 1, 0)?;
 
     emit!(TicketTransferred {
         ticket: ticket.key(),
