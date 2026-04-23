@@ -13,9 +13,14 @@ This file defines the base context that your Copilot agent must know to help you
   - **3. Minting Execution**:
     - _Crypto Payments_: Tickets (Solana NFTs) are minted immediately and automatically upon chain confirmation.
     - _Fiat/Offline Payments_: Tickets require manual approval in the `Creator`'s dashboard before minting.
-  - **4. Monetization (PetrApp Balance/Credits)**: Upon minting either payment type, PetrApp deducts its platform commission and `Affiliate` payouts from the `Creator`'s pre-funded "PetrApp Balance".
-  - **5. Network Fees Subsidized**: To accelerate Creator adoption, PetrApp covers all Solana network/minting transaction fees (gas/SOL) centrally.
-  - **6. Balance Management**: Creators can top up their PetrApp Balance with crypto or credit cards (via Dynamic). If credits run out, Creators must either enable "Auto-recharge" or the system will freeze ticket minting for their events.
+  - **4. Monetization (Billing Plans & Credits)**:
+    - Promoters (Creators) operate under **Billing Plans** that dictate costs for event creation, a base ticket fee, and a platform fee percentage.
+    - _Event Creation_: Promoters pay a fixed amount of **Credits** (1 Credit = $1 USD) from their balance to create an event.
+    - _Ticket Sales (Internal Payment)_: If the attendee pays via PetrApp's integrated gateways (Crypto, Stripe), PetrApp deducts its % commission directly from the transaction total. The promoter's credit balance is only deducted the flat base ticket fee (e.g., 1 credit) for the minting.
+    - _Ticket Sales (External Payment)_: If the attendee pays via external methods (cash, external POS, bank transfer), PetrApp cannot deduct its fee from the transaction. Instead, the promoter's credit balance is deducted the fixed base ticket fee _plus_ the equivalent % commission of the ticket price converted into credits.
+    - `Affiliate` payouts are also deducted from the Creator's pre-funded Credit Balance when applicable.
+  - **5. Network Fees Subsidized**: To accelerate Creator adoption, PetrApp covers all Solana network/minting transaction fees (gas/SOL) centrally, logging them as platform expenses.
+  - **6. Balance Management**: Creators top up their "Credit Balance" with crypto or fiat. If credits run out, Creators must either enable "Auto-recharge" or the system will freeze ticket minting and event creation.
   - **7. B2B Embed Widgets**: Promoters can embed their PetrApp events into their own external websites or e-commerce platforms using an iframe.
   - **Authentication (Users & Creators)**: Web2 and Web3 hybrid authentication using **Dynamic (dynamic.xyz)** SDK. Creators only need to configure an accumulator wallet for crypto revenue (no SOL fee-payer wallet needed due to subsidies).
 
@@ -42,6 +47,7 @@ This file defines the base context that your Copilot agent must know to help you
 ## Databases / Cache
 
 - PostgreSQL as the primary database (users, events, orders, tickets, transfers).
+- **Initial SQL Schema:** Refer to [tentative-db.md](tentative-db.md) as the absolute source of truth when writing Prisma models, mapping relationships (Promoter Ledger, Billing Plans, Affiliate Commissions, etc.).
 - Redis for:
   - Caching (events/tickets).
   - Rate limiting and sessions.
