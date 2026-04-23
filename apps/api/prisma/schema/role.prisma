@@ -7,7 +7,8 @@ model Role {
 
   userType UserType @relation(fields: [userTypeId], references: [id])
 
-  users UserRole[]
+  users           UserRole[]
+  rolePermissions RolePermission[]
 
   @@map("roles")
 }
