@@ -12,6 +12,7 @@ import { FinanceModule } from './finance/finance.module';
 import { AffiliatesModule } from './affiliates/affiliates.module';
 import { BlockchainModule } from './blockchain/blockchain.module';
 import { StorageModule } from './storage/storage.module';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
