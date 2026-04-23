@@ -1,0 +1,363 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model UserType {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name        String   @unique
+  description String?
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  users User[]
+  roles Role[]
+
+  @@map("user_types")
+}
+
+model User {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userTypeId  String    @map("user_type_id") @db.Uuid
+  dynamicId   String?   @unique @map("dynamic_id")
+  username    String?   @unique
+  email       String?   @unique
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt   DateTime  @default(now()) @map("updated_at") @db.Timestamptz
+  deletedAt   DateTime? @map("deleted_at") @db.Timestamptz
+
+  userType UserType @relation(fields: [userTypeId], references: [id])
+
+  wallets              UserWallet[]
+  roles                UserRole[]
+  promoters            UserPromoter[]
+  affiliateCodes       AffiliateCode[]
+  tickets              Ticket[]
+  transactions         Transaction[]
+  affiliateCommissions AffiliateCommission[]
+
+  @@index([dynamicId])
+  @@map("users")
+}
+
+model UserWallet {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId        String   @map("user_id") @db.Uuid
+  walletAddress String   @unique @map("wallet_address")
+  walletType    String   @default("solana") @map("wallet_type")
+  isPrimary     Boolean? @default(false) @map("is_primary")
+  connectedAt   DateTime @default(now()) @map("connected_at") @db.Timestamptz
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([walletAddress])
+  @@map("user_wallets")
+}
+
+model Role {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userTypeId  String    @map("user_type_id") @db.Uuid
+  name        String    @unique
+  description String?
+  deletedAt   DateTime? @map("deleted_at") @db.Timestamptz
+
+  userType UserType @relation(fields: [userTypeId], references: [id])
+
+  users UserRole[]
+
+  @@map("roles")
+}
+
+model UserRole {
+  userId     String   @map("user_id") @db.Uuid
+  roleId     String   @map("role_id") @db.Uuid
+  assignedAt DateTime @default(now()) @map("assigned_at") @db.Timestamptz
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@id([userId, roleId])
+  @@map("user_roles")
+}
+
+model Venue {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name        String
+  address     String
+  city        String
+  country     String
+  capacity    Int?
+  timezone    String   @default("UTC")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  seats  Seat[]
+  events Event[]
+
+  @@map("venues")
+}
+
+model Seat {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  venueId      String   @map("venue_id") @db.Uuid
+  sectionName  String   @map("section_name")
+  rowName      String   @map("row_name")
+  seatNumber   String   @map("seat_number")
+  isAccessible Boolean? @default(false) @map("is_accessible")
+
+  venue Venue @relation(fields: [venueId], references: [id], onDelete: Cascade)
+
+  tickets Ticket[]
+
+  @@unique([venueId, sectionName, rowName, seatNumber])
+  @@map("seats")
+}
+
+model Category {
+  id      String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name    String  @unique
+  slug    String  @unique
+  iconUrl String? @map("icon_url")
+
+  events EventCategory[]
+
+  @@map("categories")
+}
+
+model BillingPlan {
+  id                     String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name                   String   @unique // 'Free', 'Pro', 'Enterprise'
+  eventCreationCredits   Decimal  @default(10.00) @map("event_creation_credits") @db.Decimal(10, 2)
+  baseTicketCredits      Decimal  @default(1.00) @map("base_ticket_credits") @db.Decimal(10, 2)
+  platformFeePercentage  Decimal  @default(5.00) @map("platform_fee_percentage") @db.Decimal(5, 2)
+  description            String?
+  createdAt              DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  promoters Promoter[]
+
+  @@map("billing_plans")
+}
+
+model Promoter {
+  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name          String    @unique
+  description   String?
+  billingPlanId String?   @map("billing_plan_id") @db.Uuid
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt     DateTime  @default(now()) @map("updated_at") @db.Timestamptz
+  deletedAt     DateTime? @map("deleted_at") @db.Timestamptz
+
+  billingPlan BillingPlan? @relation(fields: [billingPlanId], references: [id])
+
+  users   UserPromoter[]
+  ledgers PromoterLedger[]
+
+  @@map("promoters")
+}
+
+model UserPromoter {
+  id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId     String    @map("user_id") @db.Uuid
+  promoterId String    @map("promoter_id") @db.Uuid
+  createdAt  DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  deletedAt  DateTime? @map("deleted_at") @db.Timestamptz
+
+  user     User     @relation(fields: [userId], references: [id])
+  promoter Promoter @relation(fields: [promoterId], references: [id])
+
+  events Event[]
+
+  @@map("user_promoters")
+}
+
+model Event {
+  id             String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userPromoterId String?   @map("user_promoter_id") @db.Uuid
+  venueId        String?   @map("venue_id") @db.Uuid
+  name           String
+  description    String?
+  collectionMint String?   @unique @map("collection_mint")
+  metadataUri    String?   @map("metadata_uri")
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt      DateTime  @default(now()) @map("updated_at") @db.Timestamptz
+  deletedAt      DateTime? @map("deleted_at") @db.Timestamptz
+
+  userPromoter UserPromoter? @relation(fields: [userPromoterId], references: [id])
+  venue        Venue?        @relation(fields: [venueId], references: [id])
+
+  categories      EventCategory[]
+  sessions        EventSession[]
+  ticketTiers     TicketTier[]
+  affiliateCodes  AffiliateCode[]
+  promoterLedgers PromoterLedger[]
+
+  @@map("events")
+}
+
+model EventCategory {
+  eventId    String @map("event_id") @db.Uuid
+  categoryId String @map("category_id") @db.Uuid
+
+  event    Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  category Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@id([eventId, categoryId])
+  @@map("event_categories")
+}
+
+model EventSession {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  eventId   String   @map("event_id") @db.Uuid
+  name      String?
+  startTime DateTime @map("start_time") @db.Timestamptz
+  endTime   DateTime @map("end_time") @db.Timestamptz
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  tickets Ticket[]
+
+  @@index([startTime])
+  @@map("event_sessions")
+}
+
+model TicketTier {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  eventId     String   @map("event_id") @db.Uuid
+  name        String
+  price       Decimal  @db.Decimal(10, 2)
+  currency    String   @default("usd")
+  maxCapacity Int      @map("max_capacity")
+  metadataUri String?  @map("metadata_uri")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  tickets Ticket[]
+
+  @@map("ticket_tiers")
+}
+
+model AffiliateCode {
+  id                 String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  eventId            String   @map("event_id") @db.Uuid
+  affiliateId        String   @map("affiliate_id") @db.Uuid
+  code               String   @unique
+  discountPercentage Decimal  @map("discount_percentage") @db.Decimal(5, 2)
+  createdAt          DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  event     Event @relation(fields: [eventId], references: [id])
+  affiliate User  @relation(fields: [affiliateId], references: [id])
+
+  tickets Ticket[]
+
+  @@map("affiliate_codes")
+}
+
+model Ticket {
+  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  sessionId       String    @map("session_id") @db.Uuid
+  tierId          String    @map("tier_id") @db.Uuid
+  attendeeId      String    @map("attendee_id") @db.Uuid
+  seatId          String?   @map("seat_id") @db.Uuid
+  affiliateCodeId String?   @map("affiliate_code_id") @db.Uuid
+  mintAddress     String?   @unique @map("mint_address")
+  status          String // 'pending_payment', 'minting', 'minted', 'used', 'cancelled'
+  purchaseTime    DateTime? @default(now()) @map("purchase_time") @db.Timestamptz
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  deletedAt       DateTime? @map("deleted_at") @db.Timestamptz
+
+  session       EventSession   @relation(fields: [sessionId], references: [id])
+  tier          TicketTier     @relation(fields: [tierId], references: [id])
+  attendee      User           @relation(fields: [attendeeId], references: [id])
+  seat          Seat?          @relation(fields: [seatId], references: [id])
+  affiliateCode AffiliateCode? @relation(fields: [affiliateCodeId], references: [id])
+
+  promoterLedgers      PromoterLedger[]
+  platformExpenses     PlatformExpense[]
+  affiliateCommissions AffiliateCommission[]
+
+  @@index([sessionId])
+  @@index([attendeeId])
+  @@map("tickets")
+}
+
+model Transaction {
+  id                  String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId              String   @map("user_id") @db.Uuid
+  amount              Decimal  @db.Decimal(10, 2)
+  platformFeeAmount   Decimal? @default(0.00) @map("platform_fee_amount") @db.Decimal(10, 2)
+  promoterAmount      Decimal? @default(0.00) @map("promoter_amount") @db.Decimal(10, 2)
+  currency            String
+  paymentMethod       String   @map("payment_method")
+  txSignature         String?  @unique @map("tx_signature")
+  senderWallet        String?  @map("sender_wallet")
+  status              String?  @default("pending")
+  transactionTime     DateTime @default(now()) @map("transaction_time") @db.Timestamptz
+
+  user User @relation(fields: [userId], references: [id])
+
+  promoterLedgers      PromoterLedger[]
+  affiliateCommissions AffiliateCommission[]
+
+  @@map("transactions")
+}
+
+model PromoterLedger {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  promoterId    String   @map("promoter_id") @db.Uuid
+  transactionId String?  @map("transaction_id") @db.Uuid
+  ticketId      String?  @map("ticket_id") @db.Uuid
+  eventId       String?  @map("event_id") @db.Uuid
+  amount        Decimal  @db.Decimal(10, 2)
+  currency      String   @default("credits")
+  entryType     String   @map("entry_type")
+  description   String?
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  promoter    Promoter     @relation(fields: [promoterId], references: [id])
+  transaction Transaction? @relation(fields: [transactionId], references: [id])
+  ticket      Ticket?      @relation(fields: [ticketId], references: [id])
+  event       Event?       @relation(fields: [eventId], references: [id])
+
+  @@map("promoter_ledgers")
+}
+
+model PlatformExpense {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  ticketId       String?  @map("ticket_id") @db.Uuid
+  txSignature    String?  @unique @map("tx_signature")
+  networkFeeSol  Decimal  @map("network_fee_sol") @db.Decimal(18, 9)
+  description    String?
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  ticket Ticket? @relation(fields: [ticketId], references: [id])
+
+  @@map("platform_expenses")
+}
+
+model AffiliateCommission {
+  id                  String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  affiliateId         String    @map("affiliate_id") @db.Uuid
+  ticketId            String    @map("ticket_id") @db.Uuid
+  amount              Decimal   @db.Decimal(10, 2)
+  currency            String    @default("usd")
+  status              String
+  payoutTransactionId String?   @map("payout_transaction_id") @db.Uuid
+  createdAt           DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  paidAt              DateTime? @map("paid_at") @db.Timestamptz
+
+  affiliate         User         @relation(fields: [affiliateId], references: [id])
+  ticket            Ticket       @relation(fields: [ticketId], references: [id])
+  payoutTransaction Transaction? @relation(fields: [payoutTransactionId], references: [id])
+
+  @@map("affiliate_commissions")
+}
