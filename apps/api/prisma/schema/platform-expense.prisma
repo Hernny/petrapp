@@ -1,0 +1,12 @@
+model PlatformExpense {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  ticketId      String?  @map("ticket_id") @db.Uuid
+  txSignature   String?  @unique @map("tx_signature")
+  networkFeeSol Decimal  @map("network_fee_sol") @db.Decimal(18, 9)
+  description   String?
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  ticket Ticket? @relation(fields: [ticketId], references: [id])
+
+  @@map("platform_expenses")
+}

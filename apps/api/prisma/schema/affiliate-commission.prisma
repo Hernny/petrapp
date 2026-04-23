@@ -1,0 +1,17 @@
+model AffiliateCommission {
+  id                  String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  affiliateId         String    @map("affiliate_id") @db.Uuid
+  ticketId            String    @map("ticket_id") @db.Uuid
+  amount              Decimal   @db.Decimal(10, 2)
+  currency            String    @default("usd")
+  status              String
+  payoutTransactionId String?   @map("payout_transaction_id") @db.Uuid
+  createdAt           DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  paidAt              DateTime? @map("paid_at") @db.Timestamptz
+
+  affiliate         User         @relation(fields: [affiliateId], references: [id])
+  ticket            Ticket       @relation(fields: [ticketId], references: [id])
+  payoutTransaction Transaction? @relation(fields: [payoutTransactionId], references: [id])
+
+  @@map("affiliate_commissions")
+}

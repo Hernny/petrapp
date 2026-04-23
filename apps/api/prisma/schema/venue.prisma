@@ -1,0 +1,15 @@
+model Venue {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name      String
+  address   String
+  city      String
+  country   String
+  capacity  Int?
+  timezone  String   @default("UTC")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  seats  Seat[]
+  events Event[]
+
+  @@map("venues")
+}

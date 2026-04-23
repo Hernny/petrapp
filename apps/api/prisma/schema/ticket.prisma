@@ -1,0 +1,27 @@
+model Ticket {
+  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  sessionId       String    @map("session_id") @db.Uuid
+  tierId          String    @map("tier_id") @db.Uuid
+  attendeeId      String    @map("attendee_id") @db.Uuid
+  seatId          String?   @map("seat_id") @db.Uuid
+  affiliateCodeId String?   @map("affiliate_code_id") @db.Uuid
+  mintAddress     String?   @unique @map("mint_address")
+  status          String // 'pending_payment', 'minting', 'minted', 'used', 'cancelled'
+  purchaseTime    DateTime? @default(now()) @map("purchase_time") @db.Timestamptz
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  deletedAt       DateTime? @map("deleted_at") @db.Timestamptz
+
+  session       EventSession   @relation(fields: [sessionId], references: [id])
+  tier          TicketTier     @relation(fields: [tierId], references: [id])
+  attendee      User           @relation(fields: [attendeeId], references: [id])
+  seat          Seat?          @relation(fields: [seatId], references: [id])
+  affiliateCode AffiliateCode? @relation(fields: [affiliateCodeId], references: [id])
+
+  promoterLedgers      PromoterLedger[]
+  platformExpenses     PlatformExpense[]
+  affiliateCommissions AffiliateCommission[]
+
+  @@index([sessionId])
+  @@index([attendeeId])
+  @@map("tickets")
+}
