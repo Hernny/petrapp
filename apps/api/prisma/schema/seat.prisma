@@ -1,0 +1,15 @@
+model Seat {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  venueId      String   @map("venue_id") @db.Uuid
+  sectionName  String   @map("section_name")
+  rowName      String   @map("row_name")
+  seatNumber   String   @map("seat_number")
+  isAccessible Boolean? @default(false) @map("is_accessible")
+
+  venue Venue @relation(fields: [venueId], references: [id], onDelete: Cascade)
+
+  tickets Ticket[]
+
+  @@unique([venueId, sectionName, rowName, seatNumber])
+  @@map("seats")
+}

@@ -1,0 +1,16 @@
+model Promoter {
+  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name          String    @unique
+  description   String?
+  billingPlanId String?   @map("billing_plan_id") @db.Uuid
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt     DateTime  @default(now()) @map("updated_at") @db.Timestamptz
+  deletedAt     DateTime? @map("deleted_at") @db.Timestamptz
+
+  billingPlan BillingPlan? @relation(fields: [billingPlanId], references: [id])
+
+  users   UserPromoter[]
+  ledgers PromoterLedger[]
+
+  @@map("promoters")
+}

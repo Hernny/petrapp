@@ -1,0 +1,13 @@
+model Role {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userTypeId  String    @map("user_type_id") @db.Uuid
+  name        String    @unique
+  description String?
+  deletedAt   DateTime? @map("deleted_at") @db.Timestamptz
+
+  userType UserType @relation(fields: [userTypeId], references: [id])
+
+  users UserRole[]
+
+  @@map("roles")
+}

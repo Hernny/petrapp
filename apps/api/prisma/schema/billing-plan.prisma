@@ -1,0 +1,13 @@
+model BillingPlan {
+  id                    String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name                  String   @unique // 'Free', 'Pro', 'Enterprise'
+  eventCreationCredits  Decimal  @default(10.00) @map("event_creation_credits") @db.Decimal(10, 2)
+  baseTicketCredits     Decimal  @default(1.00) @map("base_ticket_credits") @db.Decimal(10, 2)
+  platformFeePercentage Decimal  @default(5.00) @map("platform_fee_percentage") @db.Decimal(5, 2)
+  description           String?
+  createdAt             DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  promoters Promoter[]
+
+  @@map("billing_plans")
+}

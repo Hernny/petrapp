@@ -1,0 +1,23 @@
+model Event {
+  id             String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userPromoterId String?   @map("user_promoter_id") @db.Uuid
+  venueId        String?   @map("venue_id") @db.Uuid
+  name           String
+  description    String?
+  collectionMint String?   @unique @map("collection_mint")
+  metadataUri    String?   @map("metadata_uri")
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt      DateTime  @default(now()) @map("updated_at") @db.Timestamptz
+  deletedAt      DateTime? @map("deleted_at") @db.Timestamptz
+
+  userPromoter UserPromoter? @relation(fields: [userPromoterId], references: [id])
+  venue        Venue?        @relation(fields: [venueId], references: [id])
+
+  categories      EventCategory[]
+  sessions        EventSession[]
+  ticketTiers     TicketTier[]
+  affiliateCodes  AffiliateCode[]
+  promoterLedgers PromoterLedger[]
+
+  @@map("events")
+}

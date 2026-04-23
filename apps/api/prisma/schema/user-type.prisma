@@ -1,0 +1,11 @@
+model UserType {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name        String   @unique
+  description String?
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  users User[]
+  roles Role[]
+
+  @@map("user_types")
+}
