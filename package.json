@@ -53,6 +53,10 @@
     "libs/shared/*"
   ],
   "dependencies": {
+    "@dynamic-labs/bitcoin": "^4.78.0",
+    "@dynamic-labs/ethereum": "^4.78.0",
+    "@dynamic-labs/sdk-react-core": "^4.78.0",
+    "@dynamic-labs/solana": "^4.78.0",
     "@nestjs/common": "^11.0.0",
     "@nestjs/config": "^4.0.4",
     "@nestjs/core": "^11.0.0",
