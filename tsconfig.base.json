@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "ignoreDeprecations": "6.0",
     "composite": true,
     "declarationMap": true,
     "emitDeclarationOnly": true,
@@ -16,6 +17,10 @@
     "skipLibCheck": true,
     "strict": true,
     "target": "es2022",
-    "customConditions": ["@petrapp/source"]
+    "customConditions": ["@petrapp/source"],
+    "baseUrl": ".",
+    "paths": {
+      "@shared/database": ["libs/shared/database/src/index.ts"]
+    }
   }
 }

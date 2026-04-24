@@ -4,29 +4,15 @@
   "service": "app",
   "workspaceFolder": "/workspace",
   "remoteUser": "root",
-  
-  "forwardPorts": [3000, 3001, 3333, 5432, 6379],
+
+  "forwardPorts": [3000, 3001, 3333, 5432, 6379, 5555],
   "portsAttributes": {
-    "3000": {
-      "label": "Web",
-      "onAutoForward": "notify"
-    },
-    "3001": {
-      "label": "Admin",
-      "onAutoForward": "notify"
-    },
-    "3333": {
-      "label": "API",
-      "onAutoForward": "notify"
-    },
-    "5432": {
-      "label": "PostgreSQL",
-      "onAutoForward": "silent"
-    },
-    "6379": {
-      "label": "Redis",
-      "onAutoForward": "silent"
-    }
+    "3000": { "label": "Web", "onAutoForward": "notify" },
+    "3001": { "label": "Admin", "onAutoForward": "notify" },
+    "3333": { "label": "API", "onAutoForward": "notify" },
+    "5432": { "label": "PostgreSQL", "onAutoForward": "silent" },
+    "6379": { "label": "Redis", "onAutoForward": "silent" },
+    "5555": { "label": "Prisma Studio", "onAutoForward": "notify" }
   },
 
   "customizations": {
@@ -35,38 +21,32 @@
         "ms-vscode.vscode-typescript-next",
         "esbenp.prettier-vscode",
         "dbaeumer.vscode-eslint",
-        "nrwl.nx-console",
+        "nrwl.angular-console",
         "bradlc.vscode-tailwindcss",
         "jdinhlife.gruvbox",
         "eamodio.gitlens",
-        "github.copilot"
+        "github.copilot",
+        "github.copilot-chat",
+        "github.vscode-github-actions",
+        "ms-azuretools.vscode-docker",
+        "prisma.prisma",
+        "ms-ceintl.vscode-language-pack-es"
       ],
       "settings": {
         "editor.formatOnSave": true,
         "editor.defaultFormatter": "esbenp.prettier-vscode",
-        "[typescript]": {
-          "editor.defaultFormatter": "esbenp.prettier-vscode"
-        },
-        "[json]": {
-          "editor.defaultFormatter": "esbenp.prettier-vscode"
-        },
         "editor.codeActionsOnSave": {
           "source.fixAll.eslint": "explicit"
         },
         "terminal.integrated.defaultProfile.linux": "bash",
-        "terminal.integrated.profiles.linux": {
-          "bash": {
-            "path": "/bin/bash",
-            "icon": "terminal-bash"
-          }
-        }
+        "prisma.showPrismaDataPlatformNotification": false
       }
     }
   },
 
   "postCreateCommand": "yarn install",
   "postStartCommand": "echo 'PetrApp Dev Container ready!'",
-  
+
   "mounts": [
     "source=${localEnv:USERPROFILE}/.ssh,target=/root/.ssh,type=bind,consistency=cached"
   ]
