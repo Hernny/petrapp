@@ -3,6 +3,7 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "projectType": "application",
   "sourceRoot": "apps/ticketing/programs",
+  "tags": ["type:app", "scope:blockchain"],
   "targets": {
     "build": {
       "executor": "nx:run-commands",
@@ -25,6 +26,5 @@
         "cwd": "apps/ticketing"
       }
     }
-  },
-  "tags": ["type:app", "scope:blockchain"]
+  }
 }

@@ -60,3 +60,5 @@ out
 .env.local
 .env.*.local
 !.env.example
+
+vitest.config.*.timestamp*
