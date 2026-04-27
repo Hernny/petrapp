@@ -7,7 +7,7 @@ export class PrismaService
   implements OnModuleInit, OnModuleDestroy
 {
   constructor() {
-    super(); // Aquí puedes pasar la config de prisma.config.ts si es necesario
+    super();
   }
 
   async onModuleInit() {

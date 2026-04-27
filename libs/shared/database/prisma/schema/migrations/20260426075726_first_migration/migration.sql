@@ -71,8 +71,8 @@ CREATE TABLE "event_sessions" (
 -- CreateTable
 CREATE TABLE "events" (
     "id" UUID NOT NULL DEFAULT gen_random_uuid(),
-    "user_promoter_id" UUID,
-    "venue_id" UUID,
+    "user_promoter_id" UUID NOT NULL,
+    "venue_id" UUID NOT NULL,
     "name" TEXT NOT NULL,
     "description" TEXT,
     "collection_mint" TEXT,
@@ -89,6 +89,8 @@ CREATE TABLE "permissions" (
     "id" UUID NOT NULL DEFAULT gen_random_uuid(),
     "name" TEXT NOT NULL,
     "description" TEXT,
+    "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMPTZ NOT NULL,
     "deleted_at" TIMESTAMPTZ,
 
     CONSTRAINT "permissions_pkey" PRIMARY KEY ("id")
@@ -149,6 +151,8 @@ CREATE TABLE "roles" (
     "user_type_id" UUID NOT NULL,
     "name" TEXT NOT NULL,
     "description" TEXT,
+    "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMPTZ NOT NULL,
     "deleted_at" TIMESTAMPTZ,
 
     CONSTRAINT "roles_pkey" PRIMARY KEY ("id")
@@ -215,17 +219,6 @@ CREATE TABLE "transactions" (
 );
 
 -- CreateTable
-CREATE TABLE "user_promoters" (
-    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
-    "user_id" UUID NOT NULL,
-    "promoter_id" UUID NOT NULL,
-    "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "deleted_at" TIMESTAMPTZ,
-
-    CONSTRAINT "user_promoters_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
 CREATE TABLE "user_roles" (
     "user_id" UUID NOT NULL,
     "role_id" UUID NOT NULL,
@@ -240,6 +233,8 @@ CREATE TABLE "user_types" (
     "name" TEXT NOT NULL,
     "description" TEXT,
     "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMPTZ NOT NULL,
+    "deleted_at" TIMESTAMPTZ,
 
     CONSTRAINT "user_types_pkey" PRIMARY KEY ("id")
 );
@@ -252,6 +247,9 @@ CREATE TABLE "user_wallets" (
     "wallet_type" TEXT NOT NULL DEFAULT 'solana',
     "is_primary" BOOLEAN DEFAULT false,
     "connected_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMPTZ NOT NULL,
+    "deleted_at" TIMESTAMPTZ,
 
     CONSTRAINT "user_wallets_pkey" PRIMARY KEY ("id")
 );
@@ -260,6 +258,7 @@ CREATE TABLE "user_wallets" (
 CREATE TABLE "users" (
     "id" UUID NOT NULL DEFAULT gen_random_uuid(),
     "user_type_id" UUID NOT NULL,
+    "promoter_id" UUID,
     "dynamic_id" TEXT,
     "username" TEXT,
     "email" TEXT,
@@ -312,6 +311,9 @@ CREATE UNIQUE INDEX "platform_expenses_tx_signature_key" ON "platform_expenses"(
 CREATE UNIQUE INDEX "promoters_name_key" ON "promoters"("name");
 
 -- CreateIndex
+CREATE INDEX "role_permissions_role_id_idx" ON "role_permissions"("role_id");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "roles_name_key" ON "roles"("name");
 
 -- CreateIndex
@@ -330,13 +332,16 @@ CREATE INDEX "tickets_attendee_id_idx" ON "tickets"("attendee_id");
 CREATE UNIQUE INDEX "transactions_tx_signature_key" ON "transactions"("tx_signature");
 
 -- CreateIndex
+CREATE INDEX "user_roles_user_id_idx" ON "user_roles"("user_id");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "user_types_name_key" ON "user_types"("name");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "user_wallets_wallet_address_key" ON "user_wallets"("wallet_address");
 
 -- CreateIndex
-CREATE INDEX "user_wallets_wallet_address_idx" ON "user_wallets"("wallet_address");
+CREATE INDEX "user_wallets_wallet_address_user_id_is_primary_idx" ON "user_wallets"("wallet_address", "user_id", "is_primary");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "users_dynamic_id_key" ON "users"("dynamic_id");
@@ -375,10 +380,10 @@ ALTER TABLE "event_categories" ADD CONSTRAINT "event_categories_category_id_fkey
 ALTER TABLE "event_sessions" ADD CONSTRAINT "event_sessions_event_id_fkey" FOREIGN KEY ("event_id") REFERENCES "events"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "events" ADD CONSTRAINT "events_user_promoter_id_fkey" FOREIGN KEY ("user_promoter_id") REFERENCES "user_promoters"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "events" ADD CONSTRAINT "events_user_promoter_id_fkey" FOREIGN KEY ("user_promoter_id") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "events" ADD CONSTRAINT "events_venue_id_fkey" FOREIGN KEY ("venue_id") REFERENCES "venues"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "events" ADD CONSTRAINT "events_venue_id_fkey" FOREIGN KEY ("venue_id") REFERENCES "venues"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "platform_expenses" ADD CONSTRAINT "platform_expenses_ticket_id_fkey" FOREIGN KEY ("ticket_id") REFERENCES "tickets"("id") ON DELETE SET NULL ON UPDATE CASCADE;
@@ -432,12 +437,6 @@ ALTER TABLE "tickets" ADD CONSTRAINT "tickets_affiliate_code_id_fkey" FOREIGN KE
 ALTER TABLE "transactions" ADD CONSTRAINT "transactions_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "user_promoters" ADD CONSTRAINT "user_promoters_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "user_promoters" ADD CONSTRAINT "user_promoters_promoter_id_fkey" FOREIGN KEY ("promoter_id") REFERENCES "promoters"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
 ALTER TABLE "user_roles" ADD CONSTRAINT "user_roles_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
@@ -448,3 +447,6 @@ ALTER TABLE "user_wallets" ADD CONSTRAINT "user_wallets_user_id_fkey" FOREIGN KE
 
 -- AddForeignKey
 ALTER TABLE "users" ADD CONSTRAINT "users_user_type_id_fkey" FOREIGN KEY ("user_type_id") REFERENCES "user_types"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "users" ADD CONSTRAINT "users_promoter_id_fkey" FOREIGN KEY ("promoter_id") REFERENCES "promoters"("id") ON DELETE SET NULL ON UPDATE CASCADE;

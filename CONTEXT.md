@@ -106,3 +106,13 @@ The system is structured around four primary actors with distinct permissions, a
 - **Creator (Promotor de Eventos)**: The event organizer who uses the platform SaaS tools to create and manage events (Simple or Promoted), issue complimentary tickets, generate iframe widgets, track analytics, and validate tickets at the door using the scanner app. They interact primarily with the organizer dashboard (`apps/admin`).
 - **Affiliate (Afiliado / Revendedor)**: External promoters, influencers, or resellers who partner with PetrApp or specific Creators. They generate trackable discount codes or referral links to promote events and earn commissions for successful ticket sales. They have a specialized portal to track their referrals and commission payouts.
 - **Platform Admin (PetrApp Admin)**: The overarching super-administrator (your company). Manages the SaaS platform globally. Responsible for onboarding/managing Creators, handling global reports, configuration of fees, platform subscription management, and overseeing the entire ecosystem's health.
+
+# Run DB comands
+
+## migrate
+
+- yarn nx db-migrate @shared/database
+
+## generate
+
+- yarn nx db-generate @shared/database

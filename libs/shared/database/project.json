@@ -4,24 +4,31 @@
   "projectType": "library",
   "sourceRoot": "libs/shared/database/src",
   "targets": {
-    "db-generate": {
-      "executor": "nx:run-commands",
-      "options": {
-        "command": "npx prisma generate",
-        "cwd": "libs/shared/database"
-      }
-    },
     "db-migrate": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "npx prisma migrate dev",
+        "command": "dotenv -e ../../../.env -- npx prisma migrate dev --schema=prisma/schema --config prisma/prisma.config.ts ",
+        "cwd": "libs/shared/database"
+      }
+    },
+    "db-generate": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "dotenv -e ../../../.env -- npx prisma generate --schema=prisma/schema --config prisma/prisma.config.ts",
+        "cwd": "libs/shared/database"
+      }
+    },
+    "db-reset": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "dotenv -e ../../../.env -- npx prisma migrate reset --force --schema=prisma/schema --config prisma/prisma.config.ts",
         "cwd": "libs/shared/database"
       }
     },
     "db-studio": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "npx prisma studio",
+        "command": "dotenv -e ../../../.env -- npx prisma studio --schema=prisma/schema --config prisma/prisma.config.ts",
         "cwd": "libs/shared/database"
       }
     }

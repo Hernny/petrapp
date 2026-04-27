@@ -9,8 +9,8 @@ model Promoter {
 
   billingPlan BillingPlan? @relation(fields: [billingPlanId], references: [id])
 
-  users   UserPromoter[]
+  users   User[]
   ledgers PromoterLedger[]
-
+  events  Event[]
   @@map("promoters")
 }

@@ -2,7 +2,10 @@ model UserType {
   id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   name        String   @unique
   description String?
-  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
+  createdAt  DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt  DateTime  @updatedAt @map("updated_at") @db.Timestamptz // @updatedAt automático
+  deletedAt  DateTime? @map("deleted_at") @db.Timestamptz
+
 
   users User[]
   roles Role[]

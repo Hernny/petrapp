@@ -1,0 +1,28 @@
+                List of relations
+ Schema |         Name          | Type  |  Owner  
+--------+-----------------------+-------+---------
+ public | _prisma_migrations    | table | petrapp
+ public | affiliate_codes       | table | petrapp
+ public | affiliate_commissions | table | petrapp
+ public | billing_plans         | table | petrapp
+ public | categories            | table | petrapp
+ public | event_categories      | table | petrapp
+ public | event_sessions        | table | petrapp
+ public | events                | table | petrapp
+ public | permissions           | table | petrapp
+ public | platform_expenses     | table | petrapp
+ public | promoter_ledgers      | table | petrapp
+ public | promoters             | table | petrapp
+ public | role_permissions      | table | petrapp
+ public | roles                 | table | petrapp
+ public | seats                 | table | petrapp
+ public | ticket_tiers          | table | petrapp
+ public | tickets               | table | petrapp
+ public | transactions          | table | petrapp
+ public | user_roles            | table | petrapp
+ public | user_types            | table | petrapp
+ public | user_wallets          | table | petrapp
+ public | users                 | table | petrapp
+ public | venues                | table | petrapp
+(23 rows)
+
