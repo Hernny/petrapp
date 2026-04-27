@@ -1,6 +1,7 @@
 model User {
   id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   userTypeId String    @map("user_type_id") @db.Uuid
+  promoterId String?   @map("promoter_id") @db.Uuid 
   dynamicId  String?   @unique @map("dynamic_id")
   username   String?   @unique
   email      String?   @unique
@@ -9,14 +10,15 @@ model User {
   deletedAt  DateTime? @map("deleted_at") @db.Timestamptz
 
   userType UserType @relation(fields: [userTypeId], references: [id])
+  promoter Promoter? @relation(fields: [promoterId], references: [id])
 
   wallets              UserWallet[]
   roles                UserRole[]
-  promoters            UserPromoter[]
   affiliateCodes       AffiliateCode[]
   tickets              Ticket[]
   transactions         Transaction[]
   affiliateCommissions AffiliateCommission[]
+  events              Event[]
 
   @@index([dynamicId])
   @@map("users")

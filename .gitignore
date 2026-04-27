@@ -62,3 +62,4 @@ out
 !.env.example
 
 vitest.config.*.timestamp*
+test-output

@@ -3,7 +3,9 @@ model Role {
   userTypeId  String    @map("user_type_id") @db.Uuid
   name        String    @unique
   description String?
-  deletedAt   DateTime? @map("deleted_at") @db.Timestamptz
+  createdAt  DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt  DateTime  @updatedAt @map("updated_at") @db.Timestamptz // @updatedAt automático
+  deletedAt  DateTime? @map("deleted_at") @db.Timestamptz
 
   userType UserType @relation(fields: [userTypeId], references: [id])
 
